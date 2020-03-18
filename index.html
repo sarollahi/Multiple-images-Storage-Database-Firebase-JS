@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>firebase Storage/DB</title>
+
+<style media="screen">
+    body {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    #uploader {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 50%;
+        margin-bottom: 10px;
+    }
+</style>
+
+</head>
+
+<body>
+
+<progress value="0" max="100" id="uploader">0%</progress>
+<input id='fileButton' type='file' multiple/>
+
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-analytics.js"></script>
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: "",
+    measurementId: ""
+  };
+  
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  
+  //Get Elements
+  var uploader = document.getElementById('uploader');
+  var fileButton = document.getElementById('fileButton');
+  //Listen to file Selection
+  fileButton.addEventListener('change', function(e){
+      
+      //Get Files
+      for (var i = 0; i < fileButton.files.length; i++) {    
+          
+            const ref = firebase.storage().ref();
+            const file = e.target.files[i]
+            const name = 'MBlog_images/' + file.name;
+            
+            const task = ref.child(name).put(file);
+            task
+              .then(snapshot => snapshot.ref.getDownloadURL())
+              .then((url) => {
+                var percentage = (task.snapshot.bytesTransferred / task.snapshot.totalBytes) * 100;
+				uploader.value = percentage;
+                console.log(url);
+                let Obj = {
+                        image: url, 
+                    }
+                var postKey = firebase.database().ref('MBlog/').push().key;
+                firebase.database().ref('/MBlog/').child(postKey).set(Obj);
+              })
+              .catch(console.error);
+      }
+  });
+  
+
+  
+</script>
+
+</body>
+
+</html>
